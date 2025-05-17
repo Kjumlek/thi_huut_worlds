@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thi Hüüt - Worlds</title>
+
+  <!-- SUNVOX -->
+  <script src="lib/sunvox.js"></script>
+  <script src="lib/sunvox_lib_loader.js"></script>
+
+  <!-- THREE JS MODULE SHIMS -->
+  <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./three/build/three.module.js"
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    a {
+      color: lightblue;
+    }
+
+    button {
+      margin: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- INTERFACE UTILISATEUR -->
+<div id="ui">
+  Status: <span id="status">initializing...</span><br>
+  <form action="">
+    <button type="button" onclick="sv_play_from_beginning(0); playStatus = 1; info();">▶ Play</button>
+    <button type="button" onclick="sv_stop(0); playStatus = 0;">■ Stop</button>
+    <button type="button" onclick="sv_pause(0);">⏸ Pause</button>
+    <button type="button" onclick="sv_resume(0);">⏵ Resume</button>
+    <input type="file" id="files" name="files" style="display:none;" onchange="fileChanged(event)"/>
+  </form>
+  <p>
+    <table>
+      <tr><td><a href="#" onclick="load('music/world_a_001.sunvox'); return false;">World A 001</a></td></tr>
+      <tr><td><a href="#" onclick="load('music/world_a_002.sunvox'); return false;">World A 002</a></td></tr>
+      <tr><td><a href="#" onclick="load('music/world_b_001.sunvox'); return false;">World B 001</a></td></tr>
+	  <tr><td><a href="#" onclick="load('music/world_b_002.sunvox'); return false;">World B 001</a></td></tr>
+    </table>
+  </p>
+</div>
+
+<!-- THREE.JS BACKGROUND -->
+<script type="module">
+  import * as THREE from 'three';
+  import { OBJLoader } from './three/examples/jsm/loaders/OBJLoader.js';
+  import { EffectComposer } from './three/examples/jsm/postprocessing/EffectComposer.js';
+  import { RenderPass } from './three/examples/jsm/postprocessing/RenderPass.js';
+  import { ShaderPass } from './three/examples/jsm/postprocessing/ShaderPass.js';
+  import { LuminosityShader } from './three/examples/jsm/shaders/LuminosityShader.js';
+  import { SobelOperatorShader } from './three/examples/jsm/shaders/SobelOperatorShader.js';
+
+  let camera, scene, renderer, composer, object, effectSobel;
+
+  init();
+  animate();
+
+  function init() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 10, 25);
+    camera.lookAt(scene.position);
+
+    const manager = new THREE.LoadingManager(() => {
+      object.traverse(child => {
+        if (child instanceof THREE.Mesh) {
+          child.material = new THREE.MeshPhongMaterial({ color: 0xffff00 });
+        }
+      });
+      object.position.set(0, -60, 0);
+      object.scale.set(20, 20, 20);
+      object.rotation.y = 1;
+      scene.add(object);
+    });
+
+    const loader = new OBJLoader(manager);
+    loader.load('./models/skeleton.OBJ', obj => { object = obj; });
+
+    scene.add(new THREE.AmbientLight(0xcccccc, 0.4));
+    const pointLight = new THREE.PointLight(0xffffff, 0.8);
+    camera.add(pointLight);
+    scene.add(camera);
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const effectGrayScale = new ShaderPass(LuminosityShader);
+    composer.addPass(effectGrayScale);
+
+    effectSobel = new ShaderPass(SobelOperatorShader);
+    effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
+    effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio;
+    composer.addPass(effectSobel);
+
+    window.addEventListener('resize', onWindowResize);
+  }
+
+  function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
+    effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio;
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    composer.render();
+  }
+</script>
+
+<!-- SUNVOX SCRIPT -->
+<script>
+  var fileSize = 0;
+  var numLines = 1;
+  var scopeArray = new Int16Array(256);
+  var scopeArray2 = new Int16Array(2);
+  var urlPars = {};
+  var playStatus = 0;
+  var centerReq = 0;
+  var offsetX = 0;
+  var offsetY = 0;
+
+  function status(s) {
+    document.getElementById("status").innerHTML = s;
+    console.log(s);
+  }
+
+  function info() {
+    var s = "File info:<br>";
+    s += "size: " + fileSize + " bytes;<br>";
+    s += "name: " + sv_get_song_name(0) + ";<br>";
+    s += "BPM: " + sv_get_song_bpm(0) + ";<br>";
+    s += "TPL: " + sv_get_song_tpl(0) + ";<br>";
+    s += "frames: " + sv_get_song_length_frames(0) + ";<br>";
+    numLines = sv_get_song_length_lines(0);
+    s += "lines: " + numLines + ";<br>";
+    s += "modules: " + sv_get_number_of_modules(0) + ";<br>";
+    s += "patterns: " + sv_get_number_of_patterns(0) + ";<br>";
+    s += "<pre>Log:\n" + sv_get_log(1024) + "</pre>";
+  }
+
+  function loadFromArrayBuffer(buf) {
+    if (buf) {
+      var byteArray = new Uint8Array(buf);
+      if (sv_load_from_memory(0, byteArray) == 0) {
+        centerReq = 1;
+        fileSize = byteArray.byteLength;
+        status("song loaded");
+        info();
+        if (playStatus) {
+          sv_play_from_beginning(0);
+        }
+      } else {
+        status("song load error");
+      }
+    }
+  }
+
+  function load(fname) {
+    status("loading: " + fname);
+    var req = new XMLHttpRequest();
+    req.open("GET", fname, true);
+    req.responseType = "arraybuffer";
+    req.onload = function () {
+      if (this.status != 200) {
+        status("file not found");
+        return;
+      }
+      loadFromArrayBuffer(this.response);
+    };
+    req.send(null);
+  }
+
+  function fileChanged(evt) {
+    var file = evt.target.files[0];
+    var reader = new FileReader();
+    reader.onloadend = function () {
+      status("loading...");
+      loadFromArrayBuffer(reader.result);
+    };
+    if (file) reader.readAsArrayBuffer(file);
+  }
+
+  // URL params
+  var v = window.location.search.slice(1).split("&");
+  for (var i = 0; i < v.length; i++) {
+    var pair = v[i].split("=");
+    urlPars[pair[0]] = pair[1];
+  }
+
+  // Init SunVox
+  svlib.then(function (Module) {
+    svlib = Module;
+    status("SunVoxLib loaded");
+    var ver = sv_init(0, 44100, 2, 0);
+    if (ver >= 0) {
+      status("init ok");
+    } else {
+      status("init error");
+      return;
+    }
+    sv_open_slot(0);
+    var fname = "music/world_b_002.sunvox";
+    if (urlPars["file"] != null) fname = urlPars["file"];
+    load(fname);
+  });
+</script>
+
+</body>
+</html>
