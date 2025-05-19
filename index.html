@@ -1,255 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Three.js Background</title>
-  <link rel="stylesheet" type="text/css" href="styles.css">
-  <style>
-    #fullscreen-btn {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 9999;
-      padding: 8px 12px;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Background</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-  <button id="fullscreen-btn">Plein écran</button>
+    <!-- Fond animé Three.js -->
+    <div id="three-bg"></div>
 
-  <!-- Fond animé Three.js -->
-  <div id="three-bg"></div>
-
-  <!-- Contenu au-dessus du fond -->
-  <div class="content">
-    <h1>Thi Hüüt - Worlds</h1>
-    <p>Generative Music Library</p>
-  </div>
-
-  <!-- INTERFACE UTILISATEUR -->
-  <div id="ui">
-    <div id="status_line"><span id="status">initializing...</span><br></div>
+    <!-- Contenu au-dessus du fond -->
+    <div class="content">
+        <h1>Thi Hüüt - Worlds</h1>
+        <p>Generative Music Library</p>
+    </div>
+    <!-- INTERFACE UTILISATEUR -->
+    <div id="ui">
+        <div id="status_line"><span id="status">initializing...</span><br></div>
+    
     <form action="">
-      <button type="button" onclick="sv_play_from_beginning(0); playStatus = 1; info();">▶</button>
-      <button type="button" onclick="sv_stop(0); playStatus = 0;">■</button>
-      <button type="button" onclick="sv_pause(0);">||</button>
-      <button type="button" onclick="sv_resume(0);">X</button>
-      <input type="file" id="files" name="files" style="display:none;" onchange="fileChanged(event)"/>
+        <button type="button" onclick="sv_play_from_beginning(0); playStatus = 1; info();">▶</button>
+        <button type="button" onclick="sv_stop(0); playStatus = 0;">■</button>
+        <button type="button" onclick="sv_pause(0);">||</button>
+        <button type="button" onclick="sv_resume(0);">X</button>
+        <input type="file" id="files" name="files" style="display:none;" onchange="fileChanged(event)"/>
     </form>
     <p>
-      <table>
-        <tr><td><a href="#" onclick="load('music/Intangible_marvel.sunvox'); return false;">Intangible marvel</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/City_001.sunvox'); return false;">City 001</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/Wanderer.sunvox'); return false;">Wanderer</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/Around_life.sunvox'); return false;">Around life</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/City_002.sunvox'); return false;">City 002</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/Pan.sunvox'); return false;">Pan</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/Subjects.sunvox'); return false;">Subjects</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/Meditation.sunvox'); return false;">Meditation</a></td></tr>
-        <tr><td><a href="#" onclick="load('music/It_will_be_fine.sunvox'); return false;">It'll be fine</a></td></tr>
-      </table>
+        <table>
+            <tr><td><a href="#" onclick="load('music/Intangible_marvel.sunvox'); return false;">Intangible marvel</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/City_001.sunvox'); return false;">City 001</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/Wanderer.sunvox'); return false;">Wanderer</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/Around_life.sunvox'); return false;">Around life</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/City_002.sunvox'); return false;">City 002</a></td></tr>            
+            <tr><td><a href="#" onclick="load('music/Pan.sunvox'); return false;">Pan</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/Subjects.sunvox'); return false;">Subjects</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/Meditation.sunvox'); return false;">Meditation</a></td></tr>
+            <tr><td><a href="#" onclick="load('music/It_will_be_fine.sunvox'); return false;">It'll be fine</a></td></tr>
+        </table>
     </p>
-  </div>
+    </div>
 
-  <!-- SUNVOX -->
-  <script src="lib/sunvox.js"></script>
-  <script src="lib/sunvox_lib_loader.js"></script>
+     <!-- SUNVOX -->
+    <script src="lib/sunvox.js"></script>
+    <script src="lib/sunvox_lib_loader.js"></script>
 
-  <!-- Scripts -->
-  <script src="three.min.js"></script>
-  <script src="postprocessing.min.js"></script>
+    <!-- Scripts -->
+    <script src="three.min.js"></script>
+    <script src="postprocessing.min.js"></script>
+    <script>
+        let scene, camera, renderer, cloudParticles = [], composer;
 
-  <script>
-    document.getElementById('fullscreen-btn').addEventListener('click', () => {
-      const el = document.documentElement;
-      if (el.requestFullscreen) {
-        el.requestFullscreen();
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-      } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
-      }
-    });
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 1;
+            camera.rotation.x = 1.16;
+            camera.rotation.y = -0.12;
+            camera.rotation.z = 0.27;
 
-    let scene, camera, renderer, cloudParticles = [], composer;
+            let directionalLight = new THREE.DirectionalLight(0x888888);
+            directionalLight.position.set(0,0,1);
+            scene.add(directionalLight);
 
-    function init() {
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-      camera.position.z = 1;
-      camera.rotation.x = 1.16;
-      camera.rotation.y = -0.12;
-      camera.rotation.z = 0.27;
+            let orangeLight = new THREE.PointLight(0xcc6600, 50, 250, 1.7);
+            orangeLight.position.set(200, 300, 100);
+            scene.add(orangeLight);
 
-      let directionalLight = new THREE.DirectionalLight(0x888888);
-      directionalLight.position.set(0,0,1);
-      scene.add(directionalLight);
+            let redLight = new THREE.PointLight(0xd8547e, 50, 200, 1.7);
+            redLight.position.set(100, 300, 100);
+            scene.add(redLight);
 
-      let orangeLight = new THREE.PointLight(0xcc6600, 50, 250, 1.7);
-      orangeLight.position.set(200, 300, 100);
-      scene.add(orangeLight);
+            let blueLight = new THREE.PointLight(0x3677ac, 50, 350, 1);
+            blueLight.position.set(300, 300, 200);
+            scene.add(blueLight);
 
-      let redLight = new THREE.PointLight(0xd8547e, 50, 200, 1.7);
-      redLight.position.set(100, 300, 100);
-      scene.add(redLight);
+            renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            scene.fog = new THREE.FogExp2(0x010101, 0.001);
+            renderer.setClearColor(scene.fog.color, 1);
+            document.getElementById("three-bg").appendChild(renderer.domElement);
 
-      let blueLight = new THREE.PointLight(0x3677ac, 50, 350, 1);
-      blueLight.position.set(300, 300, 200);
-      scene.add(blueLight);
+            let loader = new THREE.TextureLoader();
+            loader.load("smoke.png", function(texture){
+                const cloudGeo = new THREE.PlaneBufferGeometry(500, 500);
+                const cloudMaterial = new THREE.MeshLambertMaterial({
+                    map: texture,
+                    transparent: true
+                });
 
-      renderer = new THREE.WebGLRenderer({ alpha: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      scene.fog = new THREE.FogExp2(0x010101, 0.001);
-      renderer.setClearColor(scene.fog.color, 1);
-      document.getElementById("three-bg").appendChild(renderer.domElement);
+                for(let p = 0; p < 50; p++){
+                    let cloud = new THREE.Mesh(cloudGeo, cloudMaterial);
+                    cloud.position.set(
+                        Math.random() * 800 - 400,
+                        500,
+                        Math.random() * 500 - 500
+                    );
+                    cloud.rotation.x = 1.16;
+                    cloud.rotation.y = -0.12;
+                    cloud.rotation.z = Math.random() * 2 * Math.PI;
+                    cloud.material.opacity = 0.55;
+                    cloudParticles.push(cloud);
+                    scene.add(cloud);
+                }
+            });
 
-      let loader = new THREE.TextureLoader();
-      loader.load("smoke.png", function(texture){
-        const cloudGeo = new THREE.PlaneBufferGeometry(500, 500);
-        const cloudMaterial = new THREE.MeshLambertMaterial({
-          map: texture,
-          transparent: true
-        });
+            const bloomEffect = new POSTPROCESSING.BloomEffect({
+                blendFunction: POSTPROCESSING.BlendFunction.COLOR_DODGE,
+                kernelSize: POSTPROCESSING.KernelSize.SMALL,
+                useLuminanceFilter: true,
+                luminanceThreshold: 0.3,
+                luminanceSmoothing: 0.75
+            });
+            bloomEffect.blendMode.opacity.value = 1.5;
 
-        for(let p = 0; p < 50; p++){
-          let cloud = new THREE.Mesh(cloudGeo, cloudMaterial);
-          cloud.position.set(Math.random()*800 - 400, 500, Math.random()*500 - 500);
-          cloud.rotation.x = 1.16;
-          cloud.rotation.y = -0.12;
-          cloud.rotation.z = Math.random()*2*Math.PI;
-          cloud.material.opacity = 0.55;
-          cloudParticles.push(cloud);
-          scene.add(cloud);
+            const effectPass = new POSTPROCESSING.EffectPass(camera, bloomEffect);
+            effectPass.renderToScreen = true;
+
+            composer = new POSTPROCESSING.EffectComposer(renderer);
+            composer.addPass(new POSTPROCESSING.RenderPass(scene, camera));
+            composer.addPass(effectPass);
+
+            window.addEventListener("resize", onWindowResize, false);
+            render();
         }
-      });
 
-      const bloomEffect = new POSTPROCESSING.BloomEffect({
-        blendFunction: POSTPROCESSING.BlendFunction.COLOR_DODGE,
-        kernelSize: POSTPROCESSING.KernelSize.SMALL,
-        useLuminanceFilter: true,
-        luminanceThreshold: 0.3,
-        luminanceSmoothing: 0.75
-      });
-      bloomEffect.blendMode.opacity.value = 1.5;
+        function onWindowResize(){
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
 
-      const effectPass = new POSTPROCESSING.EffectPass(camera, bloomEffect);
-      effectPass.renderToScreen = true;
+        function render(){
+            cloudParticles.forEach(p => {
+                p.rotation.z -= 0.001;
+            });
+            composer.render(0.1);
+            requestAnimationFrame(render);
+        }
 
-      composer = new POSTPROCESSING.EffectComposer(renderer);
-      composer.addPass(new POSTPROCESSING.RenderPass(scene, camera));
-      composer.addPass(effectPass);
+        init();
+    </script>
 
-      window.addEventListener("resize", onWindowResize, false);
-      render();
-    }
-
-    function onWindowResize(){
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    function render(){
-      cloudParticles.forEach(p => { p.rotation.z -= 0.001; });
-      composer.render(0.1);
-      requestAnimationFrame(render);
-    }
-
-    init();
-  </script>
-
-  <!-- SUNVOX SCRIPT -->
-  <script>
-    var fileSize = 0, numLines = 1, scopeArray = new Int16Array(256), scopeArray2 = new Int16Array(2);
-    var urlPars = {}, playStatus = 0, centerReq = 0, offsetX = 0, offsetY = 0;
+    <!-- SUNVOX SCRIPT -->
+    <script>
+    var fileSize = 0;
+    var numLines = 1;
+    var scopeArray = new Int16Array(256);
+    var scopeArray2 = new Int16Array(2);
+    var urlPars = {};
+    var playStatus = 0;
+    var centerReq = 0;
+    var offsetX = 0;
+    var offsetY = 0;
 
     function status(s) {
-      document.getElementById("status").innerHTML = s;
-      console.log(s);
+        document.getElementById("status").innerHTML = s;
+        console.log(s);
     }
 
     function info() {
-      var s = "File info:<br>";
-      s += "size: " + fileSize + " bytes;<br>";
-      s += "name: " + sv_get_song_name(0) + ";<br>";
-      s += "BPM: " + sv_get_song_bpm(0) + ";<br>";
-      s += "TPL: " + sv_get_song_tpl(0) + ";<br>";
-      s += "frames: " + sv_get_song_length_frames(0) + ";<br>";
-      numLines = sv_get_song_length_lines(0);
-      s += "lines: " + numLines + ";<br>";
-      s += "modules: " + sv_get_number_of_modules(0) + ";<br>";
-      s += "patterns: " + sv_get_number_of_patterns(0) + ";<br>";
-      s += "<pre>Log:\n" + sv_get_log(1024) + "</pre>";
+        var s = "File info:<br>";
+        s += "size: " + fileSize + " bytes;<br>";
+        s += "name: " + sv_get_song_name(0) + ";<br>";
+        s += "BPM: " + sv_get_song_bpm(0) + ";<br>";
+        s += "TPL: " + sv_get_song_tpl(0) + ";<br>";
+        s += "frames: " + sv_get_song_length_frames(0) + ";<br>";
+        numLines = sv_get_song_length_lines(0);
+        s += "lines: " + numLines + ";<br>";
+        s += "modules: " + sv_get_number_of_modules(0) + ";<br>";
+        s += "patterns: " + sv_get_number_of_patterns(0) + ";<br>";
+        s += "<pre>Log:\n" + sv_get_log(1024) + "</pre>";
     }
 
     function loadFromArrayBuffer(buf, fname) {
-      if (buf) {
+        if (buf) {
         var byteArray = new Uint8Array(buf);
         if (sv_load_from_memory(0, byteArray) == 0) {
-          centerReq = 1;
-          fileSize = byteArray.byteLength;
-          status(fname + " loaded");
-          info();
-          if (playStatus) sv_play_from_beginning(0);
+            centerReq = 1;
+            fileSize = byteArray.byteLength;
+            status(fname + " loaded");
+            info();
+            if (playStatus) {
+            sv_play_from_beginning(0);
+            }
         } else {
-          status("song load error");
+            status("song load error");
         }
-      }
+        }
     }
 
     function load(fname) {
-      status("loading: " + fname);
-      var req = new XMLHttpRequest();
-      req.open("GET", fname, true);
-      req.responseType = "arraybuffer";
-      req.onload = function () {
+        status("loading: " + fname);
+        var req = new XMLHttpRequest();
+        req.open("GET", fname, true);
+        req.responseType = "arraybuffer";
+        req.onload = function () {
         if (this.status != 200) {
-          status("file not found");
-          return;
+            status("file not found");
+            return;
         }
         loadFromArrayBuffer(this.response, fname);
-      };
-      req.send(null);
+        };
+        req.send(null);
     }
 
     function fileChanged(evt) {
-      var file = evt.target.files[0];
-      var reader = new FileReader();
-      reader.onloadend = function () {
+        var file = evt.target.files[0];
+        var reader = new FileReader();
+        reader.onloadend = function () {
         status("loading...");
         loadFromArrayBuffer(reader.result);
-      };
-      if (file) reader.readAsArrayBuffer(file);
+        };
+        if (file) reader.readAsArrayBuffer(file, reader.result);
     }
 
     // URL params
     var v = window.location.search.slice(1).split("&");
     for (var i = 0; i < v.length; i++) {
-      var pair = v[i].split("=");
-      urlPars[pair[0]] = pair[1];
+        var pair = v[i].split("=");
+        urlPars[pair[0]] = pair[1];
     }
 
+    // Init SunVox
     svlib.then(function (Module) {
-      svlib = Module;
-      status("SunVoxLib loaded");
-      var ver = sv_init(0, 44100, 2, 0);
-      if (ver >= 0) {
+        svlib = Module;
+        status("SunVoxLib loaded");
+        var ver = sv_init(0, 44100, 2, 0);
+        if (ver >= 0) {
         status("init ok");
-      } else {
+        } else {
         status("init error");
         return;
-      }
-      sv_open_slot(0);
-      var fname = "music/Intangible_marvel.sunvox";
-      if (urlPars["file"] != null) fname = urlPars["file"];
-      load(fname);
+        }
+        sv_open_slot(0);
+        var fname = "music/Intangible_marvel.sunvox";
+        if (urlPars["file"] != null) fname = urlPars["file"];
+        load(fname);
     });
-  </script>
+    </script>
 </body>
 </html>
