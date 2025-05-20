@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thi Hüüt - Worlds</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
@@ -20,11 +22,10 @@
         <div id="status_line"><span id="status">initializing...</span><br></div>
     
     <form action="">
-        <button type="button" onclick="sv_play_from_beginning(0); playStatus = 1; info();">▶</button>
-        <button type="button" onclick="sv_stop(0); playStatus = 0;">■</button>
-        <button type="button" onclick="sv_pause(0);">||</button>
-        <button type="button" onclick="sv_resume(0);">X</button>
-        <input type="file" id="files" name="files" style="display:none;" onchange="fileChanged(event)"/>
+        <button class="player-btn" type="button" onclick="sv_play_from_beginning(0); playStatus = 1; info();">▶</button>
+        <button class="player-btn" type="button" onclick="sv_stop(0); playStatus = 0;">■</button>
+        <button class="player-btn" type="button" onclick="sv_pause(0);">‖</button>
+        <button class="player-btn" type="button" onclick="sv_resume(0);">¬</button>
     </form>
     <p>
         <table>
@@ -32,13 +33,11 @@
             <tr><td><a href="#" onclick="load('music/City_001.sunvox'); return false;">City 001</a></td></tr>
             <tr><td><a href="#" onclick="load('music/Wanderer.sunvox'); return false;">Wanderer</a></td></tr>
             <tr><td><a href="#" onclick="load('music/Around_life.sunvox'); return false;">Around life</a></td></tr>
-            <tr><td><a href="#" onclick="load('music/Synapses_Tropicais.sunvox'); return false;">Synapses Tropicais</a></td></tr>
             <tr><td><a href="#" onclick="load('music/City_002.sunvox'); return false;">City 002</a></td></tr>            
             <tr><td><a href="#" onclick="load('music/Pan.sunvox'); return false;">Pan</a></td></tr>
             <tr><td><a href="#" onclick="load('music/Subjects.sunvox'); return false;">Subjects</a></td></tr>
             <tr><td><a href="#" onclick="load('music/Meditation.sunvox'); return false;">Meditation</a></td></tr>
             <tr><td><a href="#" onclick="load('music/It_will_be_fine.sunvox'); return false;">It'll be fine</a></td></tr>
-            <tr><td><a href="#" onclick="load('music/whale_002.sunvox'); return false;">Whale</a></td></tr>
         </table>
     </p>
     </div>
