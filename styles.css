@@ -30,6 +30,7 @@ canvas {
     position: relative;
     z-index: 1;
     padding: 40px;
+    padding-bottom: 30px;
     text-align: center;
 }
 
