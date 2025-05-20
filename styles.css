@@ -82,3 +82,20 @@ a {
     a {
       display: contents;
     }
+
+    button {
+      background: transparent;
+      border: 1px solid white;
+      color: white;
+      font-size: 1.2rem;
+      padding: 6px 12px;
+      margin: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
