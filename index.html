@@ -181,7 +181,7 @@
         if (sv_load_from_memory(0, byteArray) == 0) {
             centerReq = 1;
             fileSize = byteArray.byteLength;
-            status(fname + " loaded");
+            status(fname.replace(/^music\/|\.sunvox$/g, "") + " loaded");
             info();
             if (playStatus) {
             sv_play_from_beginning(0);
